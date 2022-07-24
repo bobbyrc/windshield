@@ -1,4 +1,4 @@
-FROM ruby:3.0.4-alpine
+FROM ruby:2.7.6-alpine
 
 # install sudo
 RUN apk add sudo
