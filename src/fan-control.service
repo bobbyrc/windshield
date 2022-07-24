@@ -1,13 +1,13 @@
 [Unit]
-Description=R710 fan control
+Description=Dell Server Fan Control
 
 [Service]
 Type=simple
 User=<your user>
 Group=<your group>
-ExecStart=/opt/r710-fan-control/Fan-Control-CLI.rb start
-ExecStopPost=/opt/r710-fan-control/Fan-Control-CLI.rb reset
-WorkingDirectory=/opt/r710-fan-control
+ExecStart=/opt/windshield/Fan-Control-CLI.rb start
+ExecStopPost=/opt/windshield/Fan-Control-CLI.rb reset
+WorkingDirectory=/opt/windshield
 Restart=always
 RestartSec=15
 

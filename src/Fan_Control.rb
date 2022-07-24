@@ -2,29 +2,57 @@ require 'yaml'
 require 'colorize'
 require 'singleton'
 
-module R710_Tools
+# docker container environment variable keys
+$idracAddressKey = 'IDRAC_ADDRESS'
+$idracUserKey = 'IDRAC_USER'
+$idracPasswordKey = 'IDRAC_PASSWORD'
+$tempCheckIntervalKey = 'TEMP_CHECK_INTERVAL'
+$maxTempKey = 'MAX_TEMP'
+$cooldownPeriodKey = 'COOLDOWN_PEROID'
+
+module Windshield
   class Fan_Control
     include Singleton
+
     @@config_locations = [ '/etc/fan-control.yaml', 'fan-control.yaml' ]
     @config = nil
     @is_manual = false
     @last_speed_set = 0
     @ipmitool = nil
 
+    # user config variables
+    @@idracAddress = ENV.fetch($idracAddressKey, nil)
+    @@idracUser = ENV.fetch($idracUserKey, nil)
+    @@idracPassword = ENV.fetch($idracPasswordKey, nil)
+    @@tempCheckInterval = ENV.fetch($tempCheckIntervalKey, 5)
+    @@maxTemp = ENV.fetch($maxTempKey, 66)
+    @@cooldownPeriod = ENV.fetch($cooldownPeriodKey, 120)
+
     # load config on init
     def initialize
+      # check that ipmitool is installed
       @ipmitool = `which ipmitool`.strip
       raise "ipmitool command not found" unless File.exist? @ipmitool
+
+      # check that lm-sensors is installed
       @sensors = `which sensors`.strip
       raise "sensors command not found" unless File.exist? @sensors
+
+      # check for required docker environment variables
+      raise "iDRAC address was not specified. Please pass the #{$idracAddressKey} environment variable to your docker container" if @@idracAddress.nil?
+      raise "iDRAC user was not specified. Please pass the #{$idracUserKey} environment variable to your docker container" if @@idracUser.nil?
+      raise "iDRAC password was not specified. Please pass the #{$idracPasswordKey} environment variable to your docker container" if @@idracPassword.nil?
+
+      # load config file
       @@config_locations.each do |loc|
-        if File.exist?(loc)
+        if !@config.nil? && File.exist?(loc)
           puts "Loading configuration from #{loc}".colorize(:yellow)
           @config = YAML.load_file(loc, permitted_classes: [Range, Symbol])
           break
         end
       end
       raise "Did not find config file!" if @config.nil?
+
     end
 
     # get current cpu core temperature from sensors
@@ -44,7 +72,7 @@ module R710_Tools
 
     # get current ambient temp via ipmi
     def get_ambient
-      output = `#{@ipmitool} -I lanplus -H #{@config[:host]} -U #{@config[:user]} -P #{@config[:pass]} sdr get "Ambient Temp"`
+      output = `#{@ipmitool} -I lanplus -H #{@@idracAddress} -U #{@@idracUser} -P #{@@idracPassword} sdr get "Ambient Temp"`
       result = {}
       output.each_line do |line|
         if line =~ /Sensor Reading\s+:\s+(\d+)/
@@ -69,7 +97,7 @@ module R710_Tools
 
     # get current fan speeds via ipmi
     def get_fan_speed
-      output = `#{@ipmitool} -I lanplus -H #{@config[:host]} -U #{@config[:user]} -P #{@config[:pass]} sdr type Fan`
+      output = `#{@ipmitool} -I lanplus -H #{@@idracAddress} -U #{@@idracUser} -P #{@@idracPassword} sdr type Fan`
       max_speed = 0
       min_speed = 15000
       output.each_line do |line|
@@ -87,21 +115,21 @@ module R710_Tools
     # @param target fan speed in percent of max speed as integer
     def set_fan_speed(speed_percent)
       target_speed = sprintf("%02X",speed_percent)
-      system("#{@ipmitool} -I lanplus -H #{@config[:host]} -U #{@config[:user]} -P #{@config[:pass]} raw 0x30 0x30 0x02 0xff 0x#{target_speed}")
+      system("#{@ipmitool} -I lanplus -H #{@@idracAddress} -U #{@@idracUser} -P #{@@idracPassword} raw 0x30 0x30 0x02 0xff 0x#{target_speed}")
       @last_speed_set = speed_percent
       puts "Fan speed set to #{speed_percent}% (0x#{target_speed})"
     end
 
     # set fan speed control to manual
     def set_fan_manual
-      system("#{@ipmitool} -I lanplus -H #{@config[:host]} -U #{@config[:user]} -P #{@config[:pass]} raw 0x30 0x30 0x01 0x00")
+      system("#{@ipmitool} -I lanplus -H #{@@idracAddress} -U #{@@idracUser} -P #{@@idracPassword} raw 0x30 0x30 0x01 0x00")
       @is_manual = true
       puts "Manual fan control active".colorize(:light_blue)
     end
 
     # set fan speed control to automatic
     def set_fan_automatic
-      system("#{@ipmitool} -I lanplus -H #{@config[:host]} -U #{@config[:user]} -P #{@config[:pass]} raw 0x30 0x30 0x01 0x01")
+      system("#{@ipmitool} -I lanplus -H #{@@idracAddress} -U #{@@idracUser} -P #{@@idracPassword} raw 0x30 0x30 0x01 0x01")
       @is_manual = false
       puts "Automatic fan control restored".colorize(:green)
     end
@@ -125,17 +153,17 @@ module R710_Tools
       begin
         while true
           cur_temp = get_temperature[:max]
-          if cur_temp > @config[:max_manual_temp]
+          if cur_temp > @@maxTemp
             puts "Temperature higher than max_manual_temp -> switching to automatic"
             set_fan_automatic
             puts "Cool down period started"
-            sleep @config[:cool_down_time]
+            sleep @@cooldownPeriod
             next
           end
           set_fan_manual if !@is_manual
           target = get_target_speed(cur_temp)
           set_fan_speed(target) if target != @last_speed_set
-          sleep @config[:interval]
+          sleep @@tempCheckInterval
         end
       rescue StandardError => e
         puts "Exception or Interrupt occurred - switching back to automatic fan control"

@@ -1,0 +1,20 @@
+---
+version: "3.6"
+
+services:
+  windshield:
+    image: ghcr.io/bobbyrc/windshield:latest
+    container_name: windshield
+    environment:
+      - IDRAC_ADDRESS=<YOUR iDRAC IP HERE>
+      - IDRAC_USER=<YOUR iDRAC USERNAME HERE>
+      - IDRAC_PASSWORD=<YOUR iDRAC PASSWORD HERE>
+      - TEMP_CHECK_INTERVAL=5 #optional
+      - MAX_TEMP=65 #optional
+      - COOLDOWN_PEROID=120 #optional
+    cap_add:
+      - SYS_PTRACE
+      - PERFMON
+    volumes:
+      - /path/to/fan/config.yml:/etc/fan-control.yaml #optional
+    restart: unless-stopped
