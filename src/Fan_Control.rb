@@ -20,7 +20,7 @@ module R710_Tools
       @@config_locations.each do |loc|
         if File.exist?(loc)
           puts "Loading configuration from #{loc}".colorize(:yellow)
-          @config = YAML.load_file(loc)
+          @config = YAML.load_file(loc, permitted_classes: [Range, Symbol])
           break
         end
       end

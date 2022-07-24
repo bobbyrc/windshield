@@ -1,10 +1,15 @@
-FROM ruby:2.7.6-alpine
+FROM alpine:3.16
+
+# update packages
+RUN apk update
 
 # install sudo
 RUN apk add sudo
 
+# install ruby
+RUN apk add ruby
+
 # intall wget to get dependencies
-RUN apk update
 RUN apk add wget
 
 #install make
