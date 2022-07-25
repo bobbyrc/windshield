@@ -9,9 +9,6 @@ RUN apk add sudo
 # install ruby
 RUN apk add ruby
 
-# intall wget to get dependencies
-RUN apk add wget
-
 #install make
 RUN apk add make
 
@@ -40,9 +37,7 @@ RUN mkdir /windshield/dependencies
 
 # download and install lm-sensors
 WORKDIR /windshield/dependencies
-RUN wget -O lm-sensors.tar.gz https://github.com/lm-sensors/lm-sensors/archive/refs/tags/V3-6-0.tar.gz
-RUN mkdir lm-sensors
-RUN tar -xf lm-sensors.tar.gz -C ./lm-sensors --strip-components 1
+RUN git clone https://github.com/lm-sensors/lm-sensors.git
 WORKDIR /windshield/dependencies/lm-sensors
 RUN make all
 RUN make install

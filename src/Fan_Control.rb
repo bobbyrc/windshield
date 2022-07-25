@@ -25,9 +25,9 @@ module Windshield
     @@idracAddress = ENV.fetch($idracAddressKey, nil)
     @@idracUser = ENV.fetch($idracUserKey, nil)
     @@idracPassword = ENV.fetch($idracPasswordKey, nil)
-    @@tempCheckInterval = ENV.fetch($tempCheckIntervalKey, 5)
-    @@maxTemp = ENV.fetch($maxTempKey, 66)
-    @@cooldownPeriod = ENV.fetch($cooldownPeriodKey, 120)
+    @@tempCheckInterval = ENV.fetch($tempCheckIntervalKey.to_i, 5)
+    @@maxTemp = ENV.fetch($maxTempKey.to_i, 66)
+    @@cooldownPeriod = ENV.fetch($cooldownPeriodKey.to_i, 120)
 
     # load config on init
     def initialize
