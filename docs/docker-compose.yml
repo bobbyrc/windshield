@@ -5,6 +5,7 @@ services:
   windshield:
     image: ghcr.io/bobbyrc/windshield:latest
     container_name: windshield
+    network_mode: bridge
     environment:
       - IDRAC_ADDRESS=<YOUR iDRAC IP HERE>
       - IDRAC_USER=<YOUR iDRAC USERNAME HERE>

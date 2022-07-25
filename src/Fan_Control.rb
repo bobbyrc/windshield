@@ -48,7 +48,7 @@ module Windshield
       $config_locations.each do |loc|
         if @config.nil? && File.exist?(loc)
           puts "Loading configuration from #{loc}".colorize(:yellow)
-          @config = YAML.load_file(loc, permitted_classes: [Range, Symbol])
+          @config = YAML.load_file(loc)
           break
         end
       end

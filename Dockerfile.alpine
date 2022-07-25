@@ -1,41 +1,35 @@
-FROM ubuntu:22.04
+FROM alpine:3.16
 
 # update packages
-RUN apt update
+RUN apk update
 
 # install sudo
-RUN apt install sudo
-
-# install git
-RUN apt install git -y
-
-#install make
-RUN apt install make -y
-
-# install wget
-RUN apt install wget
+RUN apk add sudo
 
 # install ruby
-RUN apt install ruby -y
+RUN apk add ruby
+
+#install make
+RUN apk add make
+
+# install git
+RUN apk add git
 
 # install dependencies for lm-sensors
 # build-base includes gcc
-RUN apt install bison -y
-RUN apt install flex -y
-RUN apt install perl -y
+RUN apk add build-base
+RUN apk add bison
+RUN apk add flex
+RUN apk add perl
 
 # install dependencies for ipmitool
-RUN apt install musl-dev -y
-RUN apt install automake -y
-RUN apt install libtool -y
-RUN apt install autoconf -y
-RUN apt install build-essential -y
-RUN apt install libreadline-dev -y
-RUN apt install gcc -y
-RUN apt install libssl-dev -y
+RUN apk add automake
+RUN apk add libtool
+RUN apk add autoconf
+RUN apk add readline-dev
 
 # install ruby bundler for windshield
-RUN apt install ruby-bundler -y
+RUN apk add ruby-bundler
 
 # make a directories for our application and dependency files
 RUN mkdir /windshield
