@@ -14,7 +14,7 @@ module Windshield
   class Fan_Control
     include Singleton
 
-    @@config_locations = [ '/etc/fan-control.yaml', 'fan-control.yaml' ]
+    @@config_locations = [ '/etc/fan-control.yaml', '/windshield/fan-control.yaml' ]
     @config = nil
     @is_manual = false
     @last_speed_set = 0
