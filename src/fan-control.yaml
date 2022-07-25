@@ -8,4 +8,3 @@
   !ruby/range 51..55: 25 # run at 25% speed up to 55°C
   !ruby/range 56..60: 30 # run at 30% speed up to 60°C
   !ruby/range 61..65: 40  # run at 40% speed up to 65°C
-

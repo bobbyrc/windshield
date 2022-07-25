@@ -10,11 +10,12 @@ $tempCheckIntervalKey = 'TEMP_CHECK_INTERVAL'
 $maxTempKey = 'MAX_TEMP'
 $cooldownPeriodKey = 'COOLDOWN_PEROID'
 
+$config_locations = [ '/etc/fan-control.yaml', 'fan-control.yaml' ]
+
 module Windshield
   class Fan_Control
     include Singleton
 
-    @@config_locations = [ '/etc/fan-control.yaml', '/windshield/fan-control.yaml' ]
     @config = nil
     @is_manual = false
     @last_speed_set = 0
@@ -44,8 +45,8 @@ module Windshield
       raise "iDRAC password was not specified. Please pass the #{$idracPasswordKey} environment variable to your docker container" if @@idracPassword.nil?
 
       # load config file
-      @@config_locations.each do |loc|
-        if !@config.nil? && File.exist?(loc)
+      $config_locations.each do |loc|
+        if @config.nil? && File.exist?(loc)
           puts "Loading configuration from #{loc}".colorize(:yellow)
           @config = YAML.load_file(loc, permitted_classes: [Range, Symbol])
           break
